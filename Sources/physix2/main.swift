@@ -27,23 +27,23 @@ var restartButton = document.createElement("button")
 restartButton.innerHTML = "reset random"
 _ = body.appendChild(restartButton)
 
-var app = Game(
+var game = Game(
     canvas: zoomCanvas,
     speed: .week,
     planets: [.sun, .venus, .earth, .earthMoon, .mars]
 )
 
 let toggle = JSClosure { _ in
-    app.toggle()
+    game.toggle()
     return .undefined
 }
 
 var zoomPlanetIndex = -1
 let zoomEarth = JSClosure { _ in
     zoomPlanetIndex += 1
-    app.focus = app.planets[zoomPlanetIndex % app.planets.count].id
-    app.planetRadiusMultiplier = 100
-    app.zoom = 1.0 / (pow(10.0, 8) * 3)
+    game.focus = game.planets[zoomPlanetIndex % game.planets.count].id
+    game.planetRadiusMultiplier = 100
+    game.zoom = 1.0 / (pow(10.0, 8) * 3)
     return .undefined
 }
 
@@ -52,23 +52,23 @@ let zoomSun = JSClosure { _ in
     zoomIndex += 1
     let steps: [Double] = [9, 10]
     let step = steps[zoomIndex % steps.count]
-    app.planetRadiusMultiplier = 1000
-    app.zoom = 1.0 / (pow(10.0, step) * 1)
+    game.planetRadiusMultiplier = 1000
+    game.zoom = 1.0 / (pow(10.0, step) * 1)
     return .undefined
 }
 
 let reset = JSClosure { _ in
-    app.stop()
+    game.stop()
 
 
     var gen = SystemRandomNumberGenerator()
     func rnd(min: Double, max: Double) -> Double {
         return Double.random(in: min..<max, using: &gen)
     }
-    app = Game(
+    game = Game(
         canvas: zoomCanvas,
         speed: Time(value: Time.week.value * 10),
-        planets: (0..<5).map { i in
+        planets: (0..<3).map { i in
             Planet(
                 id: .init(value: "Earth\(i)"),
                 color: .init(value: "#00F"),
@@ -85,7 +85,7 @@ let reset = JSClosure { _ in
             )
          }
     )
-    app.start()
+    game.start()
     return .undefined
 }
 
@@ -93,5 +93,5 @@ earthButton.onclick = .object(zoomEarth)
 sunButton.onclick = .object(zoomSun)
 restartButton.onclick = .object(reset)
 
-app.start()
+game.start()
 
