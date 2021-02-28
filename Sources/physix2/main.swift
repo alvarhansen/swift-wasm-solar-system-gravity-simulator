@@ -34,13 +34,12 @@ struct Planet {
     var radius: Double
     var mass: Double
     var velocity: Vector2
-    var force: Vector2 = .zero
     var drawRadiusMultiplier: Double = 1
 
     static let earth = Planet(
         id: .init(value: "Earth"),
         color: .init(value: "#00F"),
-        origin: Point(x: 152.10 * pow(10, 9), y: 0),
+        origin: Point(x: 1.495978707 * pow(10, 11), y: 0),
         radius: 6.3781 * pow(10, 6),
         mass: 5.972 * pow(10, 24),
         velocity: Vector2(x: 0, y: 29.29 * pow(10, 3)),
@@ -82,7 +81,7 @@ class App {
     let canvas: TransformingCanvas
     var planets: [Planet] = []
     var trails: [Identifier<Planet>: [Point]] = [:]
-    static let tick: Double = 33
+    static let tick: Double = 10
 
     var timer: JSValue?
     lazy var tickFn = JSClosure { [weak self] _ in
@@ -112,11 +111,11 @@ class App {
         }
     }
 
-    let center = Planet.sun.origin
-    let centerMass: Double = Planet.sun.mass
+    var iteration = 0
 
     func iterate() {
-        appendTrail()
+        iteration += 1
+        updateTrail()
 
         movePlanets()
 
@@ -130,10 +129,14 @@ class App {
         drawPlanets()
     }
 
-    func appendTrail() {
+    func updateTrail() {
+        let maxTrailLength = 100
+        guard iteration % 3 == 0 else {
+            return
+        }
         for planet in planets {
             trails[planet.id, default: []].append(planet.origin)
-            if trails[planet.id]!.count > 100 {
+            if trails[planet.id]!.count > maxTrailLength {
                 trails[planet.id] = Array(trails[planet.id, default: []].dropFirst())
             }
         }
@@ -147,29 +150,39 @@ class App {
 //        let maxY = origins.map(\.y).max()
 
 //        canvas.offset = (Point(x: minX ?? 0, y: minY ?? 0) * -1)
-        canvas.offset = Point(x: pow(10, 11) * 1.8, y: pow(10, 11) * 1.8)
-        canvas.zoom = 1.0 / (pow(10.0, 8) * 5)
+        canvas.offset = Point(x: pow(10, 11) * 2.5, y: pow(10, 11) * 2.5)
+        canvas.zoom = 1.0 / (pow(10.0, 8) * 6)
     }
 
     func movePlanets() {
+        func gForce(p1: Planet, p2: Planet) -> Vector2 {
+            let distance: Vector2 = (p2.origin - p1.origin).vector
+            let k: Double = 6.6742 * pow(10, -11)
+            let magnitude = distance.magnitude
+            guard magnitude > 1 else { return .zero }
+            let force = k * (p1.mass * p2.mass) / pow(magnitude, 2)
+            let forceVector = distance * (force / magnitude)
+            return forceVector
+        }
         planets = planets
-            .update { $0.force = .zero }
-            .update { p in
-                let distance: Vector2 = (center - p.origin).vector
-                let k: Double = 6.6742 * pow(10, -11)
-                let magnitude = distance.magnitude
-                guard magnitude > 1 else { return }
-                let force = (k * p.mass * centerMass) / pow(magnitude, 2)
-                let forceVector = distance * (force / magnitude)
-                p.force = p.force + forceVector
-
+            .map { p -> (Planet, Vector2) in
+                let force = planets
+                    .filter { $0.id != p.id }
+                    .reduce(into: .zero) { (force, p2) in
+                        force = force + gForce(p1: p, p2: p2)
+                    }
+                return (p, force)
             }
-            .update { planet in
-                let week: Double = 7 * 24 * 60 * 60
-                let timeDelta: Double = week * 4 / Self.tick
-                let acceleration = planet.force / planet.mass
-                planet.velocity = planet.velocity + acceleration * timeDelta
-                planet.origin = planet.origin + planet.velocity * timeDelta
+            .map { (planet, force) in
+                var newPlanet = planet
+                let day: Double = 60 * 60 * 24
+                let tenDays: Double = 10 * day
+                let timeDelta: Double = tenDays / Self.tick
+                let acceleration = force / planet.mass
+                let velocity = planet.velocity + acceleration * timeDelta
+                newPlanet.velocity = velocity
+                newPlanet.origin = planet.origin + velocity * timeDelta
+                return newPlanet
             }
     }
 
@@ -186,8 +199,14 @@ class App {
     }
 
     func drawTrail() {
-        for trail in trails {
-            canvas.setStroke(start: (.init(value: "rgba(255,255,255,0)"), trail.value.first!), end: (.white, trail.value.last!))
+        let colors = [
+            (Color(value: "rgba(255,255,0,0)"), Color(value: "#FF0")),
+            (Color(value: "rgba(255,255,255,0)"), .white),
+            (Color(value: "rgba(255,0,0,0)"), .red)
+        ]
+
+        for (idx, trail) in trails.enumerated() {
+            canvas.setStroke(color: colors[idx % colors.count].1)
             canvas.drawPath(points: trail.value)
         }
     }
@@ -217,3 +236,4 @@ let toggle = JSClosure { _ in
 body.onclick = .object(toggle)
 
 app.start()
+
