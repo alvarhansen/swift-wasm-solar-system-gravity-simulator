@@ -8,16 +8,20 @@ class App {
     let speed: Time
 
     var focus = Planet.sun.id
-    var zoom: Double = 1.0 / (pow(10.0, 9) * 1)
+    var zoom: Double = 1.0 / (pow(10.0, 9) * 2)
     var planetRadiusMultiplier: Double = 1000
 
-    private var planets: [Planet] = []
+    private(set) var planets: [Planet] = []
     private var trails: [Identifier<Planet>: [Point]] = [:]
     private var timer: JSValue?
 
-    private lazy var tickFn = JSClosure { [weak self] _ in
+    private lazy var tickFn: JSClosure! = JSClosure { [weak self] _ in
         self?.iterate()
         return .undefined
+    }
+
+    deinit {
+        tickFn.release()
     }
 
     init(

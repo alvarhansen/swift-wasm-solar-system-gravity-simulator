@@ -23,16 +23,14 @@ sunButton.innerHTML = "Sun"
 _ = body.appendChild(sunButton)
 
 
-let app = App(
+var restartButton = document.createElement("button")
+restartButton.innerHTML = "reset random"
+_ = body.appendChild(restartButton)
+
+var app = App(
     canvas: zoomCanvas,
     speed: .week,
-    planets: [
-        .sun,
-        .venus,
-        .earth,
-        .earthMoon,
-        .mars
-    ]
+    planets: [.sun, .venus, .earth, .earthMoon, .mars]
 )
 
 let toggle = JSClosure { _ in
@@ -40,33 +38,60 @@ let toggle = JSClosure { _ in
     return .undefined
 }
 
+var zoomPlanetIndex = -1
 let zoomEarth = JSClosure { _ in
-    app.focus = Planet.earth.id
-    app.planetRadiusMultiplier = 10
-    app.zoom = 1.0 / (pow(10.0, 6) * 3)
+    zoomPlanetIndex += 1
+    app.focus = app.planets[zoomPlanetIndex % app.planets.count].id
+    app.planetRadiusMultiplier = 100
+    app.zoom = 1.0 / (pow(10.0, 8) * 3)
     return .undefined
 }
 
+var zoomIndex = -1
 let zoomSun = JSClosure { _ in
-    app.focus = Planet.sun.id
+    zoomIndex += 1
+    let steps: [Double] = [9, 10]
+    let step = steps[zoomIndex % steps.count]
     app.planetRadiusMultiplier = 1000
-    app.zoom = 1.0 / (pow(10.0, 9) * 1)
+    app.zoom = 1.0 / (pow(10.0, step) * 1)
+    return .undefined
+}
+
+let reset = JSClosure { _ in
+    app.stop()
+
+
+    var gen = SystemRandomNumberGenerator()
+    func rnd(min: Double, max: Double) -> Double {
+        return Double.random(in: min..<max, using: &gen)
+    }
+    app = App(
+        canvas: zoomCanvas,
+        speed: Time(value: Time.week.value * 10),
+        planets: (0..<5).map { i in
+            Planet(
+                id: .init(value: "Earth\(i)"),
+                color: .init(value: "#00F"),
+                origin: Point(
+                 x: rnd(min: -3, max: 3) * pow(10, 11),
+                 y: rnd(min: -3, max: 3) * pow(10, 11)
+                ),
+                radius: 6.3781 * pow(10, 6),
+                mass: pow(10, rnd(min: 25, max: 30)),
+                velocity: Vector2(
+                 x: rnd(min: -10, max: 10) * pow(10, 3),
+                 y: rnd(min: -10, max: 10) * pow(10, 3)
+                )
+            )
+         }
+    )
+    app.start()
     return .undefined
 }
 
 earthButton.onclick = .object(zoomEarth)
 sunButton.onclick = .object(zoomSun)
-canvas.onclick = .object(toggle)
+restartButton.onclick = .object(reset)
 
 app.start()
 
-/*
- var gen = SystemRandomNumberGenerator()
- gen.next()
-
- func rnd(min: Double, max: Double) -> Double {
-     min + (min + Double(gen.next())).truncatingRemainder(dividingBy: max)
- }
-
- print(rnd(min: 1, max: 5))
- */
