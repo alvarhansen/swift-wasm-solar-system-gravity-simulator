@@ -27,7 +27,7 @@ var restartButton = document.createElement("button")
 restartButton.innerHTML = "reset random"
 _ = body.appendChild(restartButton)
 
-var app = App(
+var app = Game(
     canvas: zoomCanvas,
     speed: .week,
     planets: [.sun, .venus, .earth, .earthMoon, .mars]
@@ -65,7 +65,7 @@ let reset = JSClosure { _ in
     func rnd(min: Double, max: Double) -> Double {
         return Double.random(in: min..<max, using: &gen)
     }
-    app = App(
+    app = Game(
         canvas: zoomCanvas,
         speed: Time(value: Time.week.value * 10),
         planets: (0..<5).map { i in

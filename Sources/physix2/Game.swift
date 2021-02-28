@@ -1,7 +1,7 @@
 import Foundation
 import JavaScriptKit
 
-class App {
+class Game {
 
     let iterationInterval: Double = 33
     let canvas: TransformingCanvas
