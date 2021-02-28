@@ -3,33 +3,36 @@ import JavaScriptKit
 
 class App {
 
+    let iterationInterval: Double = 33
     let canvas: TransformingCanvas
-    var planets: [Planet] = []
+    let speed: Time
 
     var focus = Planet.sun.id
     var zoom: Double = 1.0 / (pow(10.0, 9) * 1)
     var planetRadiusMultiplier: Double = 1000
 
-    var trails: [Identifier<Planet>: [Point]] = [:]
-
-    var speed: Time = .day
-
-    static let tick: Double = 10
-
-    var timer: JSValue?
+    private var planets: [Planet] = []
+    private var trails: [Identifier<Planet>: [Point]] = [:]
+    private var timer: JSValue?
 
     private lazy var tickFn = JSClosure { [weak self] _ in
         self?.iterate()
         return .undefined
     }
 
-    init(canvas: TransformingCanvas) {
+    init(
+        canvas: TransformingCanvas,
+        speed: Time = .day,
+        planets: [Planet]
+    ) {
         self.canvas = canvas
+        self.speed = speed
+        self.planets = planets
     }
 
     func start() {
         cosmosCanvas.fill(color: .black)
-        timer = JSObject.global.setInterval!(tickFn, Self.tick)
+        timer = JSObject.global.setInterval!(tickFn, iterationInterval)
     }
 
     func stop() {
@@ -103,7 +106,7 @@ class App {
             }
             .map { (planet, force) in
                 var newPlanet = planet
-                let timeDelta: Double = speed.value / Self.tick
+                let timeDelta: Double = speed.value / iterationInterval
                 let acceleration = force / planet.mass
                 let velocity = planet.velocity + acceleration * timeDelta
                 newPlanet.velocity = velocity

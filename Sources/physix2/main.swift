@@ -23,14 +23,17 @@ sunButton.innerHTML = "Sun"
 _ = body.appendChild(sunButton)
 
 
-let app = App(canvas: zoomCanvas)
-app.planets = [
-    .sun,
-    .venus,
-    .earth,
-    .earthMoon,
-    .mars
-]
+let app = App(
+    canvas: zoomCanvas,
+    speed: .week,
+    planets: [
+        .sun,
+        .venus,
+        .earth,
+        .earthMoon,
+        .mars
+    ]
+)
 
 let toggle = JSClosure { _ in
     app.toggle()
