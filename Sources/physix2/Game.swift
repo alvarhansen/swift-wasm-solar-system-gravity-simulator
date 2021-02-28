@@ -7,7 +7,7 @@ class Game {
     let canvas: TransformingCanvas
     let speed: Time
 
-    var focus = Planet.sun.id
+    var focus: Identifier<Planet>?
     var zoom: Double = 1.0 / (pow(10.0, 9) * 2)
     var planetRadiusMultiplier: Double = 1000
 
