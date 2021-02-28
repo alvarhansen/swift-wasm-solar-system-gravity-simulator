@@ -35,6 +35,7 @@ struct Planet {
     var mass: Double
     var velocity: Vector2
     var force: Vector2 = .zero
+    var drawRadiusMultiplier: Double = 1
 
     static let earth = Planet(
         id: .init(value: "Earth"),
@@ -42,7 +43,18 @@ struct Planet {
         origin: Point(x: 152.10 * pow(10, 9), y: 0),
         radius: 6.3781 * pow(10, 6),
         mass: 5.972 * pow(10, 24),
-        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3))
+        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3)),
+        drawRadiusMultiplier: 10
+    )
+
+    static let venus = Planet(
+        id: .init(value: "Venus"),
+        color: .init(value: "#AAA"),
+        origin: Point(x: 108.208 * pow(10, 9), y: 0),
+        radius: 6.051 * pow(10, 6),
+        mass: 4.8675 * pow(10, 24),
+        velocity: Vector2(x: 0, y: 35.02 * pow(10, 3)),
+        drawRadiusMultiplier: 10
     )
 
     static let sun = Planet(
@@ -168,7 +180,7 @@ class App {
             canvas.setFill(color: planet.color)
             canvas.drawFillCircle(
                 origin: planet.origin,
-                radius: planet.radius * planetRadiusMultiplier
+                radius: planet.radius * planet.drawRadiusMultiplier * planetRadiusMultiplier
             )
         }
     }
@@ -184,6 +196,7 @@ class App {
 let app = App(canvas: zoomCanvas)
 app.planets = [
     .sun,
+    .venus,
     .earth
 ]
 
