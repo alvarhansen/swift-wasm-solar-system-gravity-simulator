@@ -35,7 +35,7 @@ class Game {
     }
 
     func start() {
-        cosmosCanvas.fill(color: .black)
+        canvas.fill(color: .black)
         timer = JSObject.global.setInterval!(tickFn, iterationInterval)
     }
 
