@@ -60,6 +60,7 @@ class Game {
 
         movePlanets()
 
+        autoZoom()
         setTransform()
 
         canvas.clear()
@@ -72,15 +73,21 @@ class Game {
 
     func updateTrail() {
         let maxTrailLength = 100
-        guard iteration % 3 == 0 else {
-            return
-        }
         for planet in planets {
             trails[planet.id, default: []].append(planet.origin)
             if trails[planet.id]!.count > maxTrailLength {
                 trails[planet.id] = Array(trails[planet.id, default: []].dropFirst())
             }
         }
+    }
+
+    func autoZoom() {
+        let centre = (planets.first(where: { $0.id == focus })?.origin ?? .zero)
+        let maxDistance: Double = planets.map {
+            ($0.origin - centre).vector.magnitude
+        }.max()!
+
+        zoom = canvas.realCanvas.size.width / maxDistance / 2.1 //2x for centred view, 0.1x for padding
     }
 
     func setTransform() {
