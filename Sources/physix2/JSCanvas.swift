@@ -37,6 +37,19 @@ class JSCanvas: DrawCanvas {
         context.strokeStyle = .string(color.value)
     }
 
+    func setStroke(start: (Color, Point), end: (Color, Point)) {
+        let grad = context.createLinearGradient!(
+            start.1.x,
+            start.1.y,
+            end.1.x,
+            end.1.y
+        )
+        _ = grad.addColorStop(0, start.0.value)
+        _ = grad.addColorStop(1, end.0.value)
+
+        context.strokeStyle = .object(grad.object!)
+    }
+
     func setFill(color: Color) {
         context.fillStyle = .string(color.value)
     }
@@ -92,6 +105,13 @@ class TransformingCanvas: DrawCanvas {
 
     func setStroke(color: Color) {
         realCanvas.setStroke(color: color)
+    }
+
+    func setStroke(start: (Color, Point), end: (Color, Point)) {
+        realCanvas.setStroke(
+            start: (start.0, (start.1 + offset) * zoom),
+            end: (end.0, (end.1 + offset) * zoom)
+        )
     }
 
     func setFill(color: Color) {

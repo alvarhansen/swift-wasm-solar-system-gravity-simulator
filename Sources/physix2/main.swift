@@ -70,7 +70,7 @@ class App {
     let canvas: TransformingCanvas
     var planets: [Planet] = []
     var trails: [Identifier<Planet>: [Point]] = [:]
-    static let tick: Double = 100
+    static let tick: Double = 33
 
     var timer: JSValue?
     lazy var tickFn = JSClosure { [weak self] _ in
@@ -113,33 +113,30 @@ class App {
         canvas.clear()
         canvas.fill(color: .black)
 
-        drawAxis()
-
         drawTrail()
 
         drawPlanets()
-
-        canvas.setStroke(color: .white)
-        canvas.drawLine(from: Planet.earth.origin, to: Planet.sun.origin)
     }
 
     func appendTrail() {
         for planet in planets {
             trails[planet.id, default: []].append(planet.origin)
+            if trails[planet.id]!.count > 100 {
+                trails[planet.id] = Array(trails[planet.id, default: []].dropFirst())
+            }
         }
     }
 
     func setTransform() {
-        let origins = planets.map(\.origin) + [center]
-        let minX = origins.map(\.x).min()
-        let maxX = origins.map(\.x).max()
-        let minY = origins.map(\.y).min()
-        let maxY = origins.map(\.y).max()
+//        let origins = planets.map(\.origin) + [center]
+//        let minX = origins.map(\.x).min()
+//        let maxX = origins.map(\.x).max()
+//        let minY = origins.map(\.y).min()
+//        let maxY = origins.map(\.y).max()
 
 //        canvas.offset = (Point(x: minX ?? 0, y: minY ?? 0) * -1)
         canvas.offset = Point(x: pow(10, 11) * 1.8, y: pow(10, 11) * 1.8)
         canvas.zoom = 1.0 / (pow(10.0, 8) * 5)
-//        print(canvas.zoom)
     }
 
     func movePlanets() {
@@ -147,13 +144,11 @@ class App {
             .update { $0.force = .zero }
             .update { p in
                 let distance: Vector2 = (center - p.origin).vector
-                let k: Double = 1000
+                let k: Double = 6.6742 * pow(10, -11)
                 let magnitude = distance.magnitude
                 guard magnitude > 1 else { return }
                 let force = (k * p.mass * centerMass) / pow(magnitude, 2)
-    //            force / magnitude
                 let forceVector = distance * (force / magnitude)
-                print(magnitude, forceVector)
                 p.force = p.force + forceVector
 
             }
@@ -180,14 +175,9 @@ class App {
 
     func drawTrail() {
         for trail in trails {
+            canvas.setStroke(start: (.init(value: "rgba(255,255,255,0)"), trail.value.first!), end: (.white, trail.value.last!))
             canvas.drawPath(points: trail.value)
         }
-    }
-
-    func drawAxis() {
-        canvas.setStroke(color: .white)
-        canvas.drawLine(from: Point(x: 0, y: -1000), to: Point(x: 0, y: 1000))
-        canvas.drawLine(from: Point(x: -1000, y: 0), to: Point(x: 1000, y: 0))
     }
 }
 
