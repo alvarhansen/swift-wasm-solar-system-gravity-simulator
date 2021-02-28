@@ -1,0 +1,216 @@
+import Foundation
+import JavaScriptKit
+
+print("Hello, worlds!", CGSize(width: 0, height: 0))
+
+
+struct Color {
+    var value: String
+
+    static let white: Color = Color(value: "#FFF")
+    static let red: Color = Color(value: "#F00")
+    static let black: Color = Color(value: "#000")
+    static let gray: Color = Color(value: "#888")
+    static let green: Color = Color(value: "#0F0")
+}
+
+
+let document = JSObject.global.document
+
+var body = document.object!.body
+let canvas = document.createElement("canvas")
+_ = body.appendChild(canvas)
+
+let cosmosCanvas = JSCanvas(canvas: canvas.object!, size: Dimension(width: 900,height: 900))
+let zoomCanvas = TransformingCanvas(realCanvas: cosmosCanvas)
+zoomCanvas.fill(color: .black)
+
+struct Identifier<Parent>: Hashable { let value: String }
+
+struct Planet {
+    var id: Identifier<Self>
+    var color: Color
+    var origin: Point
+    var radius: Double
+    var mass: Double
+    var velocity: Vector2
+    var force: Vector2 = .zero
+
+    static let earth = Planet(
+        id: .init(value: "Earth"),
+        color: .init(value: "#00F"),
+        origin: Point(x: 152.10 * pow(10, 9), y: 0),
+        radius: 6.3781 * pow(10, 6),
+        mass: 5.972 * pow(10, 24),
+        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3))
+    )
+
+    static let sun = Planet(
+        id: .init(value: "Sun"),
+        color: .init(value: "#FF0"),
+        origin: Point(x: 0, y: 0),
+        radius: 696.342 * pow(10, 6),
+        mass: 1.9885 * pow(10, 30),
+        velocity: .zero
+    )
+}
+
+extension Array {
+    @inlinable public func update(_ transform: (inout Element) -> Void) -> [Element] {
+        map { element -> Element in
+            var copy = element
+            transform(&copy)
+            return copy
+        }
+    }
+}
+
+class App {
+
+    let canvas: TransformingCanvas
+    var planets: [Planet] = []
+    var trails: [Identifier<Planet>: [Point]] = [:]
+    static let tick: Double = 100
+
+    var timer: JSValue?
+    lazy var tickFn = JSClosure { [weak self] _ in
+        self?.iterate()
+        return .undefined
+    }
+
+    init(canvas: TransformingCanvas) {
+        self.canvas = canvas
+    }
+
+    func start() {
+        cosmosCanvas.fill(color: .black)
+        timer = JSObject.global.setInterval!(tickFn, Self.tick)
+    }
+
+    func stop() {
+        _ = JSObject.global.clearInterval!(timer)
+        timer = nil
+    }
+
+    func toggle() {
+        if let _ = timer {
+            stop()
+        } else {
+            start()
+        }
+    }
+
+    let center = Planet.sun.origin
+    let centerMass: Double = Planet.sun.mass
+
+    func iterate() {
+        appendTrail()
+
+        movePlanets()
+
+        setTransform()
+
+        canvas.clear()
+        canvas.fill(color: .black)
+
+        drawAxis()
+
+        drawTrail()
+
+        drawPlanets()
+
+        canvas.setStroke(color: .white)
+        canvas.drawLine(from: Planet.earth.origin, to: Planet.sun.origin)
+    }
+
+    func appendTrail() {
+        for planet in planets {
+            trails[planet.id, default: []].append(planet.origin)
+        }
+    }
+
+    func setTransform() {
+        let origins = planets.map(\.origin) + [center]
+        let minX = origins.map(\.x).min()
+        let maxX = origins.map(\.x).max()
+        let minY = origins.map(\.y).min()
+        let maxY = origins.map(\.y).max()
+
+//        canvas.offset = (Point(x: minX ?? 0, y: minY ?? 0) * -1)
+        canvas.offset = Point(x: pow(10, 11) * 1.8, y: pow(10, 11) * 1.8)
+        canvas.zoom = 1.0 / (pow(10.0, 8) * 5)
+//        print(canvas.zoom)
+    }
+
+    func movePlanets() {
+        planets = planets
+            .update { $0.force = .zero }
+            .update { p in
+                let distance: Vector2 = (center - p.origin).vector
+                let k: Double = 1000
+                let magnitude = distance.magnitude
+                guard magnitude > 1 else { return }
+                let force = (k * p.mass * centerMass) / pow(magnitude, 2)
+    //            force / magnitude
+                let forceVector = distance * (force / magnitude)
+                print(magnitude, forceVector)
+                p.force = p.force + forceVector
+
+            }
+            .update { planet in
+                let week: Double = 7 * 24 * 60 * 60
+                let timeDelta: Double = week * 4 / Self.tick
+                let acceleration = planet.force / planet.mass
+                planet.velocity = planet.velocity + acceleration * timeDelta
+                planet.origin = planet.origin + planet.velocity * timeDelta
+            }
+    }
+
+    func drawPlanets() {
+        let planetRadiusMultiplier: Double = pow(10, 2)
+        for planet in planets {
+            canvas.setStroke(color: planet.color)
+            canvas.setFill(color: planet.color)
+            canvas.drawFillCircle(
+                origin: planet.origin,
+                radius: planet.radius * planetRadiusMultiplier
+            )
+        }
+    }
+
+    func drawTrail() {
+        for trail in trails {
+            canvas.drawPath(points: trail.value)
+        }
+    }
+
+    func drawAxis() {
+        canvas.setStroke(color: .white)
+        canvas.drawLine(from: Point(x: 0, y: -1000), to: Point(x: 0, y: 1000))
+        canvas.drawLine(from: Point(x: -1000, y: 0), to: Point(x: 1000, y: 0))
+    }
+}
+
+let app = App(canvas: zoomCanvas)
+app.planets = [
+    .sun,
+    .earth
+]
+
+var gen = SystemRandomNumberGenerator()
+gen.next()
+
+func rnd(min: Double, max: Double) -> Double {
+    min + (min + Double(gen.next())).truncatingRemainder(dividingBy: max)
+}
+
+print(rnd(min: 1, max: 5))
+
+let toggle = JSClosure { _ in
+    app.toggle()
+    return .undefined
+}
+
+body.onclick = .object(toggle)
+
+app.start()
