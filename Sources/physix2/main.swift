@@ -18,12 +18,20 @@ struct Color {
 let document = JSObject.global.document
 
 var body = document.object!.body
-let canvas = document.createElement("canvas")
+var canvas = document.createElement("canvas")
 _ = body.appendChild(canvas)
 
 let cosmosCanvas = JSCanvas(canvas: canvas.object!, size: Dimension(width: 900,height: 900))
 let zoomCanvas = TransformingCanvas(realCanvas: cosmosCanvas)
 zoomCanvas.fill(color: .black)
+
+var earthButton = document.createElement("button")
+earthButton.innerHTML = "Earth"
+_ = body.appendChild(earthButton)
+
+var sunButton = document.createElement("button")
+sunButton.innerHTML = "Sun"
+_ = body.appendChild(sunButton)
 
 struct Identifier<Parent>: Hashable { let value: String }
 
@@ -43,7 +51,8 @@ struct Planet {
         origin: Point(x: 0, y: 0),
         radius: 696.342 * pow(10, 6),
         mass: 1.9885 * pow(10, 30),
-        velocity: .zero
+        velocity: .zero,
+        drawRadiusMultiplier: 0.1
     )
 
     static let venus = Planet(
@@ -52,8 +61,7 @@ struct Planet {
         origin: Point(x: 108.208 * pow(10, 9), y: 0),
         radius: 6.051 * pow(10, 6),
         mass: 4.8675 * pow(10, 24),
-        velocity: Vector2(x: 0, y: 35.02 * pow(10, 3)),
-        drawRadiusMultiplier: 10
+        velocity: Vector2(x: 0, y: 35.02 * pow(10, 3))
     )
 
     static let earth = Planet(
@@ -62,8 +70,7 @@ struct Planet {
         origin: Point(x: 1.495978707 * pow(10, 11), y: 0),
         radius: 6.3781 * pow(10, 6),
         mass: 5.972 * pow(10, 24),
-        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3)),
-        drawRadiusMultiplier: 10
+        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3))
     )
 
     static let earthMoon = Planet(
@@ -72,8 +79,7 @@ struct Planet {
         origin: Point(x: 1.495978707 * pow(10, 11) + 362.600 * pow(10, 6), y: 0),
         radius: 1.737 * pow(10, 6),
         mass: 7.342 * pow(10, 22),
-        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3) + 1.002 * pow(10, 3)),
-        drawRadiusMultiplier: 10
+        velocity: Vector2(x: 0, y: 29.29 * pow(10, 3) + 1.002 * pow(10, 3))
     )
 
     static let mars = Planet(
@@ -82,8 +88,7 @@ struct Planet {
         origin: Point(x: 2.492 * pow(10, 11), y: 0),
         radius: 3.389 * pow(10, 6),
         mass: 6.4171 * pow(10, 23),
-        velocity: Vector2(x: 0, y: 24.007 * pow(10, 3)),
-        drawRadiusMultiplier: 10
+        velocity: Vector2(x: 0, y: 24.007 * pow(10, 3))
     )
 
 }
@@ -102,6 +107,10 @@ class App {
 
     let canvas: TransformingCanvas
     var planets: [Planet] = []
+
+    var focus = Planet.earth.id
+    var zoom: Double = 1.0 / (pow(10.0, 6) * 3)
+
     var trails: [Identifier<Planet>: [Point]] = [:]
     static let tick: Double = 10
 
@@ -164,6 +173,8 @@ class App {
         }
     }
 
+    var planetRadiusMultiplier: Double = 10//pow(10, 2)
+
     func setTransform() {
 //        let origins = planets.map(\.origin) + [center]
 //        let minX = origins.map(\.x).min()
@@ -171,10 +182,22 @@ class App {
 //        let minY = origins.map(\.y).min()
 //        let maxY = origins.map(\.y).max()
 
-//        canvas.offset = (Point(x: minX ?? 0, y: minY ?? 0) * -1)
-        canvas.offset = Point(x: pow(10, 11) * 2.5, y: pow(10, 11) * 2.5)
-        canvas.zoom = 1.0 / (pow(10.0, 8) * 6)
+//        canvas.offset = Point(x: pow(10, 11) * 2.5, y: pow(10, 11) * 2.5)
+//        canvas.zoom = 1.0 / (pow(10.0, 8) * 6)
+
+        canvas.zoom = zoom
+        canvas.offset = Point(x: canvas.realCanvas.size.width / 2, y: canvas.realCanvas.size.height / 2) / canvas.zoom
+        canvas.offset = canvas.offset + (planets.first(where: { $0.id == focus })?.origin ?? .zero) * -1
     }
+
+    struct Time {
+        let value: Double
+
+        static let hour = Time(value: 60 * 60)
+        static let day = Time(value: 60 * 60 * 24)
+        static let week = Time(value: 60 * 60 * 24 * 7)
+    }
+    var speed: Time = .day
 
     func movePlanets() {
         func gForce(p1: Planet, p2: Planet) -> Vector2 {
@@ -197,9 +220,7 @@ class App {
             }
             .map { (planet, force) in
                 var newPlanet = planet
-                let day: Double = 60 * 60 * 24
-                let tenDays: Double = 10 * day
-                let timeDelta: Double = tenDays / Self.tick
+                let timeDelta: Double = speed.value / Self.tick
                 let acceleration = force / planet.mass
                 let velocity = planet.velocity + acceleration * timeDelta
                 newPlanet.velocity = velocity
@@ -209,7 +230,6 @@ class App {
     }
 
     func drawPlanets() {
-        let planetRadiusMultiplier: Double = pow(10, 2)
         for planet in planets {
             canvas.setStroke(color: planet.color)
             canvas.setFill(color: planet.color)
@@ -257,10 +277,22 @@ let toggle = JSClosure { _ in
     return .undefined
 }
 
-body.onclick = .object(toggle)
+let zoomEarth = JSClosure { _ in
+    app.focus = Planet.earth.id
+    app.planetRadiusMultiplier = 10
+    app.zoom = 1.0 / (pow(10.0, 6) * 3)
+    return .undefined
+}
+earthButton.onclick = .object(zoomEarth)
+
+let zoomSun = JSClosure { _ in
+    app.focus = Planet.sun.id
+    app.planetRadiusMultiplier = 1000
+    app.zoom = 1.0 / (pow(10.0, 9) * 1)
+    return .undefined
+}
+sunButton.onclick = .object(zoomSun)
+
+canvas.onclick = .object(toggle)
 
 app.start()
-//app.iterate()
-//app.iterate()
-//app.setTransform()
-//app.drawPlanets()

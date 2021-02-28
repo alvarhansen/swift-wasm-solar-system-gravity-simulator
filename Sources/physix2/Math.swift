@@ -49,6 +49,10 @@ func *(_ lhs: Point, rhs: Double) -> Point {
     Point(x: lhs.x * rhs, y: lhs.y * rhs)
 }
 
+func /(_ lhs: Point, rhs: Double) -> Point {
+    Point(x: lhs.x / rhs, y: lhs.y / rhs)
+}
+
 func -(_ lhs: Point, rhs: Vector2) -> Vector2 {
     Vector2(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
 }
