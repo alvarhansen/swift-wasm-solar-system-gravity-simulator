@@ -13,10 +13,18 @@ class JSCanvas: DrawCanvas {
     let context: JSObject
     private let canvas: JSObject
     private(set) var size: Dimension = Dimension(width: 0, height: 0)
+    private let devicePixelRatio: Double
 
     init(canvas: JSObject) {
+        let window = JSObject.global.window
+        self.devicePixelRatio = window.devicePixelRatio.number!
         self.canvas = canvas
         self.context = canvas.getContext!("2d").object!
+
+        _ = canvas.getContext!("2d").scale(
+            devicePixelRatio,
+            devicePixelRatio
+        )
     }
 
     func updateSize() {
@@ -25,7 +33,7 @@ class JSCanvas: DrawCanvas {
             else {
                 return
             }
-        size = Dimension(width: width, height: height)
+        size = Dimension(width: width * devicePixelRatio, height: height * devicePixelRatio)
 
         canvas.width = .number(size.width)
         canvas.height = .number(size.height)
