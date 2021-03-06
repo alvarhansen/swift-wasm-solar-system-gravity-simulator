@@ -1,5 +1,6 @@
-# physix2
+# Swift wasm solar system gravity simulator
 
-A description of this package.
 
 Live: [https://blog.hansen.ee/swift-wasm-solar-system-gravity-simulator/](https://blog.hansen.ee/swift-wasm-solar-system-gravity-simulator/)
+
+![](demo.gif)
