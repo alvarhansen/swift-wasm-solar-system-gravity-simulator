@@ -10,9 +10,11 @@ class App {
     let stylesheet = Stylesheet()
     let buttons = Buttons()
     var canvas: JSValue
+    var debugInfo: JSValue
 
     init() {
         let canvas = document.createElement("canvas")
+        let debugInfo = document.createElement("pre")
 
         let cosmosCanvas = JSCanvas(canvas: canvas.object!)
         let zoomCanvas = TransformingCanvas(realCanvas: cosmosCanvas)
@@ -20,6 +22,7 @@ class App {
 
         self.canvas = canvas
         self.zoomCanvas = zoomCanvas
+        self.debugInfo = debugInfo
         self.game = Game(
             canvas: zoomCanvas,
             speed: .week,
@@ -27,6 +30,7 @@ class App {
         )
 
         _ = body.appendChild(canvas)
+        _ = body.appendChild(debugInfo)
         setupUI()
     }
 
@@ -48,7 +52,19 @@ class App {
         func rnd(min: Double, max: Double) -> Double {
             return Double.random(in: min..<max, using: &gen)
         }
+
+        func resetDebugLog(add: Bool) {
+            if add {
+                game.log = { [unowned self] text in
+                    self.debugInfo.innerText = .string(text)
+                }
+            } else {
+                game.log = nil
+                self.debugInfo.innerText = ""
+            }
+        }
         buttons.add(title: "Random planets") { [unowned self] in
+            let hadLog = game.log != nil
             self.game.stop()
             self.game = Game(
                 canvas: self.zoomCanvas,
@@ -70,18 +86,25 @@ class App {
                     )
                 }
             )
+            resetDebugLog(add: hadLog)
             self.game.start()
         }
         buttons.add(title: "Home") { [unowned self] in
+            let hadLog = game.log != nil
             self.game.stop()
             self.game = Game(
                 canvas: self.zoomCanvas,
                 speed: .week,
                 planets: .sol
             )
+            resetDebugLog(add: hadLog)
             self.game.start()
         }
+        buttons.add(title: "Debug") { [unowned self] in
+            resetDebugLog(add: game.log == nil)
+        }
 
+        debugInfo.id = .string("debugInfo")
     }
 
     func start() {
@@ -127,7 +150,6 @@ class Buttons {
         _ = container.appendChild(td)
         return td
     }
-
 }
 
 class Stylesheet {
@@ -162,6 +184,13 @@ class Stylesheet {
             }
             #buttonsContainer button:hover {
                 background: #FFFFFF40;
+            }
+            #debugInfo {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                color: white;
+                font-family: monospace;
             }
             """)
         _ = head.appendChild(style)

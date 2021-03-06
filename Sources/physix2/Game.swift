@@ -3,6 +3,8 @@ import JavaScriptKit
 
 class Game {
 
+    var log: ((String) -> Void)?
+
     let iterationInterval: Double = 33
     let canvas: TransformingCanvas
     let speed: Time
@@ -70,6 +72,18 @@ class Game {
         drawTrail()
 
         drawPlanets()
+
+        let logMessage = planets.map { planet -> String in
+            """
+            \(focus == planet.id ? "►" : "")\(planet.id.value) | Mass: \(planet.mass)
+              Position: x: \(planet.origin.x) y: \(planet.origin.y)
+              Velocity: x: \(planet.velocity.x) y: \(planet.velocity.y)
+            """
+        }.joined(separator: "\n")
+        log?("""
+            iteration: \(iteration) | zoom: \(zoom)
+            \(logMessage)
+            """)
     }
 
     func updateTrail() {
