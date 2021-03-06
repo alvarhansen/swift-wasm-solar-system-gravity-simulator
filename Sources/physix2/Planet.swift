@@ -61,3 +61,13 @@ struct Planet {
     )
 
 }
+
+extension Array where Element == Planet {
+    static var sol: [Planet] = [
+        .sun,
+        .venus,
+        .mars,
+        .earth,
+        .earthMoon
+    ]
+}
