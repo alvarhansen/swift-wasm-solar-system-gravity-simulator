@@ -32,6 +32,17 @@ class App {
         _ = body.appendChild(canvas)
         _ = body.appendChild(debugInfo)
         setupUI()
+
+        addViewportMeta()
+    }
+
+    func addViewportMeta() {
+        var metaElement = document.createElement("meta")
+        metaElement.name = "viewport"
+        metaElement.content = "width=device-width, initial-scale=1.0"
+
+        let head = document.object!.head
+        _ = head.appendChild(metaElement)
     }
 
     func setupUI() {
