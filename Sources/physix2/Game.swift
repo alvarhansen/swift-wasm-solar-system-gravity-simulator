@@ -60,6 +60,7 @@ class Game {
 
         movePlanets()
 
+        canvas.updateSize()
         autoZoom()
         setTransform()
 

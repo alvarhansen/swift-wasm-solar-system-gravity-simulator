@@ -11,13 +11,22 @@ protocol DrawCanvas {
 class JSCanvas: DrawCanvas {
 
     let context: JSObject
-    let size: Dimension
+    private let canvas: JSObject
+    private(set) var size: Dimension = Dimension(width: 0, height: 0)
 
-    let liveColor = "#29fd2f"
-
-    init(canvas: JSObject, size: Dimension) {
-        self.size = size
+    init(canvas: JSObject) {
+        self.canvas = canvas
         self.context = canvas.getContext!("2d").object!
+    }
+
+    func updateSize() {
+        guard let width = canvas.clientWidth.number,
+              let height = canvas.clientHeight.number
+            else {
+                return
+            }
+        size = Dimension(width: width, height: height)
+
         canvas.width = .number(size.width)
         canvas.height = .number(size.height)
     }
@@ -93,6 +102,10 @@ class TransformingCanvas: DrawCanvas {
 
     init(realCanvas: JSCanvas) {
         self.realCanvas = realCanvas
+    }
+
+    func updateSize() {
+        realCanvas.updateSize()
     }
 
     func clear() {

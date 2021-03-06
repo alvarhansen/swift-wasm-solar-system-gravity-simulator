@@ -11,7 +11,7 @@ class App {
     init() {
         let canvas = document.createElement("canvas")
 
-        let cosmosCanvas = JSCanvas(canvas: canvas.object!, size: Dimension(width: 900,height: 900))
+        let cosmosCanvas = JSCanvas(canvas: canvas.object!)
         let zoomCanvas = TransformingCanvas(realCanvas: cosmosCanvas)
         zoomCanvas.fill(color: .black)
 
