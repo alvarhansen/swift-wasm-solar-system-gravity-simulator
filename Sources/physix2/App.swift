@@ -66,13 +66,14 @@ class App {
         buttons.add(title: "Random planets") { [unowned self] in
             let hadLog = game.log != nil
             self.game.stop()
+            let colors = ["#845EC2", "#D65DB1", "#FF6F91", "#FF9671", "#FFC75F", "#F9F871"].shuffled()
             self.game = Game(
                 canvas: self.zoomCanvas,
                 speed: Time(value: Time.week.value * 10),
                 planets: (0..<3).map { i in
                     Planet(
                         id: .init(value: "Planet \(i)"),
-                        color: .init(value: "#00F"),
+                        color: .init(value: colors[i % colors.count]),
                         origin: Point(
                             x: rnd(min: -3, max: 3) * pow(10, 11),
                             y: rnd(min: -3, max: 3) * pow(10, 11)

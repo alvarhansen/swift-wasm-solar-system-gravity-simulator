@@ -153,14 +153,8 @@ class Game {
     }
 
     func drawTrail() {
-        let colors = [
-            (Color(value: "rgba(255,255,0,0)"), Color(value: "#FF0")),
-            (Color(value: "rgba(255,255,255,0)"), .white),
-            (Color(value: "rgba(255,0,0,0)"), .red)
-        ]
-
         for (idx, trail) in trails.enumerated() {
-            canvas.setStroke(color: colors[idx % colors.count].1)
+            canvas.setStroke(color: planets[idx].color)
             canvas.drawPath(points: trail.value)
         }
     }
