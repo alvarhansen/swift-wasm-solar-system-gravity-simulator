@@ -107,7 +107,9 @@ class Game {
         }.max()!
 
         let minSide = min(canvas.realCanvas.size.width, canvas.realCanvas.size.height)
-        zoom = minSide / maxDistance / 2.1 //2x for centred view, 0.1x for padding
+        let newZoom = minSide / maxDistance / 2.1 //2x for centred view, 0.1x for padding
+        let zoomDiff = zoom - newZoom
+        zoom = zoom - zoomDiff * 0.1
     }
 
     func setTransform() {
