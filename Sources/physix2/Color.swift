@@ -6,4 +6,5 @@ struct Color {
     static let black: Color = Color(value: "#000")
     static let gray: Color = Color(value: "#888")
     static let green: Color = Color(value: "#0F0")
+    static let blue: Color = Color(value: "#00F")
 }
