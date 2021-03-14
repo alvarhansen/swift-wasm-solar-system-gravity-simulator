@@ -170,4 +170,33 @@ extension Game {
             planets: .sol
         )
     }
+
+    static func makeRandom(canvas: TransformingCanvas) -> Game {
+        var gen = SystemRandomNumberGenerator()
+        func rnd(min: Double, max: Double) -> Double {
+            return Double.random(in: min..<max, using: &gen)
+        }
+
+        let colors = ["#845EC2", "#D65DB1", "#FF6F91", "#FF9671", "#FFC75F", "#F9F871"].shuffled()
+        return Game(
+            canvas: canvas,
+            speed: Time(value: Time.week.value * 10),
+            planets: (0..<3).map { i in
+                Planet(
+                    id: .init(value: "Planet \(i)"),
+                    color: .init(value: colors[i % colors.count]),
+                    origin: Point(
+                        x: rnd(min: -3, max: 3) * pow(10, 11),
+                        y: rnd(min: -3, max: 3) * pow(10, 11)
+                    ),
+                    radius: 6.3781 * pow(10, 6),
+                    mass: rnd(min: 1, max: 2) * pow(10, 29),
+                    velocity: Vector2(
+                        x: rnd(min: -10, max: 10) * pow(10, 3),
+                        y: rnd(min: -10, max: 10) * pow(10, 3)
+                    )
+                )
+            }
+        )
+    }
 }
