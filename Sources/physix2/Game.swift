@@ -160,3 +160,14 @@ class Game {
         }
     }
 }
+
+extension Game {
+
+    static func makeSol(canvas: TransformingCanvas) -> Game {
+        Game(
+            canvas: canvas,
+            speed: .week,
+            planets: .sol
+        )
+    }
+}

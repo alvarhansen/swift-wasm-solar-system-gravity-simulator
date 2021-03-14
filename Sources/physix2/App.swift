@@ -23,11 +23,7 @@ class App {
         self.canvas = canvas
         self.zoomCanvas = zoomCanvas
         self.debugInfo = debugInfo
-        self.game = Game(
-            canvas: zoomCanvas,
-            speed: .week,
-            planets: .sol
-        )
+        self.game = .makeSol(canvas: zoomCanvas)
 
         _ = body.appendChild(canvas)
         _ = body.appendChild(debugInfo)
@@ -104,11 +100,7 @@ class App {
         buttons.add(title: "Home") { [unowned self] in
             let hadLog = game.log != nil
             self.game.stop()
-            self.game = Game(
-                canvas: self.zoomCanvas,
-                speed: .week,
-                planets: .sol
-            )
+            self.game = .makeSol(canvas: zoomCanvas)
             resetDebugLog(add: hadLog)
             self.game.start()
         }
