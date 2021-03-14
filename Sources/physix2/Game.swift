@@ -73,17 +73,21 @@ class Game {
 
         drawPlanets()
 
-        let logMessage = planets.map { planet -> String in
-            """
-            \(focus == planet.id ? "►" : "")\(planet.id.value) | Mass: \(planet.mass)
-              Position: x: \(planet.origin.x) y: \(planet.origin.y)
-              Velocity: x: \(planet.velocity.x) y: \(planet.velocity.y)
-            """
-        }.joined(separator: "\n")
-        log?("""
-            iteration: \(iteration) | zoom: \(zoom)
-            \(logMessage)
-            """)
+        if let log = log {
+            drawVelocity()
+
+            let logMessage = planets.map { planet -> String in
+                """
+                \(focus == planet.id ? "►" : "")\(planet.id.value) | Mass: \(planet.mass)
+                  Position: x: \(planet.origin.x) y: \(planet.origin.y)
+                  Velocity: x: \(planet.velocity.x) y: \(planet.velocity.y)
+                """
+            }.joined(separator: "\n")
+            log("""
+                iteration: \(iteration) | zoom: \(zoom)
+                \(logMessage)
+                """)
+        }
     }
 
     func updateTrail() {
@@ -157,6 +161,16 @@ class Game {
         for (idx, trail) in trails.enumerated() {
             canvas.setStroke(color: planets[idx].color)
             canvas.drawPath(points: trail.value)
+        }
+    }
+
+    func drawVelocity() {
+        for planet in planets {
+            canvas.setStroke(color: .white)
+            canvas.drawLine(
+                from: planet.origin,
+                to: planet.origin + planet.velocity / zoom / 100
+            )
         }
     }
 }
