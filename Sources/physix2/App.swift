@@ -90,7 +90,7 @@ class App {
                             y: rnd(min: -3, max: 3) * pow(10, 11)
                         ),
                         radius: 6.3781 * pow(10, 6),
-                        mass: pow(10, rnd(min: 25, max: 30)),
+                        mass: rnd(min: 1, max: 2) * pow(10, 29),
                         velocity: Vector2(
                             x: rnd(min: -10, max: 10) * pow(10, 3),
                             y: rnd(min: -10, max: 10) * pow(10, 3)
